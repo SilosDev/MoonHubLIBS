@@ -100,10 +100,7 @@ local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
 local settingsTable = {
 	General = {
-		-- if needs be in order just make getSetting(name)
 		rayfieldOpen = {Type = 'bind', Value = 'K', Name = 'MoonHub Keybind'},
-		-- buildwarnings
-		-- rayfieldprompts
 
 	},
 	System = {
@@ -111,9 +108,7 @@ local settingsTable = {
 	}
 }
 
--- Settings that have been overridden by the developer. These will not be saved to the user's configuration file
--- Overridden settings always take precedence over settings in the configuration file, and are cleared if the user changes the setting in the UI
-local overriddenSettings: { [string]: any } = {} -- For example, overriddenSettings["System.rayfieldOpen"] = "J"
+local overriddenSettings: { [string]: any } = {}
 local function overrideSetting(category: string, name: string, value: any)
 	overriddenSettings[category .. "." .. name] = value
 end
@@ -126,7 +121,6 @@ local function getSetting(category: string, name: string): any
 	end
 end
 
--- If requests/analytics have been disabled by developer, set the user-facing setting to false as well
 if requestsDisabled then
 	overrideSetting("System", "usageAnalytics", false)
 end
@@ -134,25 +128,20 @@ end
 local HttpService = getService('HttpService')
 local RunService = getService('RunService')
 
--- Environment Check
 local useStudio = RunService:IsStudio() or false
 
 local settingsCreated = false
-local settingsInitialized = false -- Whether the UI elements in the settings page have been set to the proper values
+local settingsInitialized = false 
 local prompt = useStudio and require(script.Parent.prompt) or loadWithTimeout('https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/prompt.lua')
 local requestFunc = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 
--- Validate prompt loaded correctly
 if not prompt and not useStudio then
 	warn("Failed to load prompt library, using fallback")
 	prompt = {
-		create = function() end -- No-op fallback
+		create = function() end 
 	}
 end
 
-
--- The function below provides a safe alternative for calling error-prone functions
--- Especially useful for filesystem function (writefile, makefolder, etc.)
 local function callSafely(func, ...)
 	if func then
 		local success, result = pcall(func, ...)
@@ -165,7 +154,6 @@ local function callSafely(func, ...)
 	end
 end
 
--- Ensures a folder exists by creating it if needed
 local function ensureFolder(folderPath)
 	if isfolder and not callSafely(isfolder, folderPath) then
 		callSafely(makefolder, folderPath)
@@ -182,7 +170,6 @@ local function loadSettings()
 			end
 		end
 
-		-- for debug in studio
 		if useStudio then
 			file = [[
 	{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Ext":true,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"CurrentKeybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Anonymised Analytics","Element":{"Ext":true,"Name":"Anonymised Analytics","Set":null,"CurrentValue":false,"Callback":null}}}}
@@ -205,9 +192,7 @@ local function loadSettings()
 			return
 		end
 
-		-- Check if settings file has any entries
 		if next(file) ~= nil then
-			-- If it does, apply them
 			for categoryName, categoryTable in file do
 				for settingName, setting in categoryTable do
 					local default = settingsTable[categoryName] and settingsTable[categoryName][settingName]
